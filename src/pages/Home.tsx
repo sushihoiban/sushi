@@ -7,46 +7,37 @@ import heroBg from "@/assets/hero-bg.jpg";
 import MenuItemCard from "@/components/MenuItemCard";
 import BookingModal from "@/components/BookingModal";
 import CartModal from "@/components/CartModal";
-
 const Home = () => {
   const navigate = useNavigate();
   const [showBooking, setShowBooking] = useState(false);
   const [showCart, setShowCart] = useState(false);
-
-  const featuredItems = [
-    {
-      id: 1,
-      title: "97. Combo 1",
-      description: "Avocado, Fresh Salmon with Sesame Sauce Salad, Crab Stick, Cucumber Roll, Shrimp with Avocado Maki",
-      price: "510.000",
-      image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&fit=crop"
-    },
-    {
-      id: 2,
-      title: "101. Baked Crab Shell with Cheese",
-      description: "Crab Meat, Crab Stick in Crab Shell with Cheese, Tobiko topping",
-      price: "90.000",
-      image: "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=400&h=300&fit=crop",
-      badge: "HOT FOOD"
-    },
-    {
-      id: 3,
-      title: "98. Combo 2",
-      description: "Avocado, Fried Salmon Skin with Sesame Sauce, Deep-Fried Shrimp Tempura and Avocado Roll",
-      price: "583.000",
-      image: "https://images.unsplash.com/photo-1564489563601-c53cfc451e93?w=400&h=300&fit=crop"
-    },
-    {
-      id: 4,
-      title: "114. Stir Fried Beef Udon",
-      description: "Tender beef with thick udon noodles and fresh vegetables",
-      price: "85.000",
-      image: "https://images.unsplash.com/photo-1618841557871-b4664fbf0cb3?w=400&h=300&fit=crop"
-    }
-  ];
-
-  return (
-    <div className="min-h-screen">
+  const featuredItems = [{
+    id: 1,
+    title: "97. Combo 1",
+    description: "Avocado, Fresh Salmon with Sesame Sauce Salad, Crab Stick, Cucumber Roll, Shrimp with Avocado Maki",
+    price: "510.000",
+    image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&fit=crop"
+  }, {
+    id: 2,
+    title: "101. Baked Crab Shell with Cheese",
+    description: "Crab Meat, Crab Stick in Crab Shell with Cheese, Tobiko topping",
+    price: "90.000",
+    image: "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=400&h=300&fit=crop",
+    badge: "HOT FOOD"
+  }, {
+    id: 3,
+    title: "98. Combo 2",
+    description: "Avocado, Fried Salmon Skin with Sesame Sauce, Deep-Fried Shrimp Tempura and Avocado Roll",
+    price: "583.000",
+    image: "https://images.unsplash.com/photo-1564489563601-c53cfc451e93?w=400&h=300&fit=crop"
+  }, {
+    id: 4,
+    title: "114. Stir Fried Beef Udon",
+    description: "Tender beef with thick udon noodles and fresh vegetables",
+    price: "85.000",
+    image: "https://images.unsplash.com/photo-1618841557871-b4664fbf0cb3?w=400&h=300&fit=crop"
+  }];
+  return <div className="min-h-screen">
       {/* Top Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-40 glass-effect border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -67,9 +58,7 @@ const Home = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setShowCart(true)}>
-              <i className="ri-shopping-cart-line text-xl" />
-            </Button>
+            
             <Button variant="ghost" size="icon">
               <i className="ri-user-line text-xl" />
             </Button>
@@ -79,10 +68,9 @@ const Home = () => {
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-20 overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroBg})` }}
-        >
+        <div className="absolute inset-0 bg-cover bg-center" style={{
+        backgroundImage: `url(${heroBg})`
+      }}>
           <div className="absolute inset-0 hero-gradient opacity-90" />
         </div>
         
@@ -134,9 +122,7 @@ const Home = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredItems.map(item => (
-            <MenuItemCard key={item.id} item={item} />
-          ))}
+          {featuredItems.map(item => <MenuItemCard key={item.id} item={item} />)}
         </div>
 
         <div className="text-center mt-12">
@@ -165,7 +151,7 @@ const Home = () => {
             <div className="text-center">
               <i className="ri-time-line text-primary text-3xl mb-3 block" />
               <h3 className="font-semibold mb-2">Hours</h3>
-              <p className="text-muted-foreground">10:00 AM - 2:00 PM<br/>4:30 PM - 9:30 PM</p>
+              <p className="text-muted-foreground">10:00 AM - 2:00 PM<br />4:30 PM - 9:30 PM</p>
             </div>
           </div>
         </Card>
@@ -174,8 +160,6 @@ const Home = () => {
       {/* Modals */}
       <BookingModal open={showBooking} onOpenChange={setShowBooking} />
       <CartModal open={showCart} onOpenChange={setShowCart} />
-    </div>
-  );
+    </div>;
 };
-
 export default Home;
