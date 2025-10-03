@@ -42,9 +42,7 @@ const Home = () => {
       <nav className="fixed top-0 left-0 right-0 z-40 glass-effect border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <h1 className="brand-font text-primary text-2xl cursor-pointer" onClick={() => navigate('/home')}>
-              HÓI BÁN SUSHI
-            </h1>
+            
             <div className="hidden md:flex items-center gap-6">
               <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate('/home')}>
                 Home
