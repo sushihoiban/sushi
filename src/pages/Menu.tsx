@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MenuItemCard from "@/components/MenuItemCard";
 import CartModal from "@/components/CartModal";
+import BottomNav from "@/components/BottomNav";
 const Menu = () => {
   const navigate = useNavigate();
   const [showCart, setShowCart] = useState(false);
@@ -111,9 +112,9 @@ const Menu = () => {
       image: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=400&h=300&fit=crop"
     }]
   };
-  return <div className="min-h-screen pb-12">
+  return <div className="min-h-screen pb-20 md:pb-12">
       {/* Top Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-40 glass-effect border-b border-border/50">
+      <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 glass-effect border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
             
@@ -138,7 +139,7 @@ const Menu = () => {
       </nav>
 
       {/* Menu Content */}
-      <div className="container mx-auto px-6 pt-24">
+      <div className="container mx-auto px-6 pt-8 md:pt-24">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Our Menu</h1>
           <p className="text-muted-foreground">Explore our exquisite selection of Japanese cuisine</p>
@@ -179,6 +180,12 @@ const Menu = () => {
       </div>
 
       <CartModal open={showCart} onOpenChange={setShowCart} />
+      
+      {/* Mobile Bottom Navigation */}
+      <BottomNav 
+        onCartClick={() => setShowCart(true)}
+        onProfileClick={() => {/* TODO: Add profile modal */}}
+      />
     </div>;
 };
 export default Menu;

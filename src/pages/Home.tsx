@@ -7,6 +7,7 @@ import heroBg from "@/assets/hero-bg.jpg";
 import MenuItemCard from "@/components/MenuItemCard";
 import BookingModal from "@/components/BookingModal";
 import CartModal from "@/components/CartModal";
+import BottomNav from "@/components/BottomNav";
 const Home = () => {
   const navigate = useNavigate();
   const [showBooking, setShowBooking] = useState(false);
@@ -37,9 +38,9 @@ const Home = () => {
     price: "85.000",
     image: "https://images.unsplash.com/photo-1618841557871-b4664fbf0cb3?w=400&h=300&fit=crop"
   }];
-  return <div className="min-h-screen">
+  return <div className="min-h-screen pb-20 md:pb-0">
       {/* Top Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-40 glass-effect border-b border-border/50">
+      <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 glass-effect border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
             
@@ -65,7 +66,7 @@ const Home = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-20 overflow-hidden">
+      <section className="relative pt-8 md:pt-24 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center" style={{
         backgroundImage: `url(${heroBg})`
       }}>
@@ -158,6 +159,12 @@ const Home = () => {
       {/* Modals */}
       <BookingModal open={showBooking} onOpenChange={setShowBooking} />
       <CartModal open={showCart} onOpenChange={setShowCart} />
+      
+      {/* Mobile Bottom Navigation */}
+      <BottomNav 
+        onCartClick={() => setShowCart(true)}
+        onProfileClick={() => {/* TODO: Add profile modal */}}
+      />
     </div>;
 };
 export default Home;
