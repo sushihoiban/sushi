@@ -165,7 +165,7 @@ const Home = () => {
             <div className="text-center">
               <i className="ri-time-line text-primary text-3xl mb-3 block" />
               <h3 className="font-semibold mb-2">Hours</h3>
-              <p className="text-muted-foreground">11:30 AM - 2:00 PM<br/>5:30 PM - 10:00 PM</p>
+              <p className="text-muted-foreground">10:00 AM - 2:00 PM<br/>4:30 PM - 9:30 PM</p>
             </div>
           </div>
         </Card>
