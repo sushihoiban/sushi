@@ -8,10 +8,17 @@ import BookingModal from "@/components/BookingModal";
 import ProfileModal from "@/components/ProfileModal";
 import BottomNav from "@/components/BottomNav";
 import MobileTopBar from "@/components/MobileTopBar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 const Menu = () => {
   const navigate = useNavigate();
   const [showBooking, setShowBooking] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [language, setLanguage] = useState("EN");
   const menuCategories = {
     combos: [{
       id: 1,
@@ -134,6 +141,49 @@ const Menu = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-primary/30 text-primary hover:bg-primary/10 transition-colors">
+                <i className="ri-global-line text-lg" />
+                <span className="text-sm font-medium">{language}</span>
+                <i className="ri-arrow-down-s-line text-sm" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur-lg border-border/50">
+                <DropdownMenuItem onClick={() => setLanguage("EN")}>
+                  English
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("VI")}>
+                  Tiếng Việt
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("KO")}>
+                  한국어 (Korean)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("ZH")}>
+                  中文 (Chinese)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("JA")}>
+                  日本語 (Japanese)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("RU")}>
+                  Русский (Russian)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("ES")}>
+                  Español (Spanish)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("DE")}>
+                  Deutsch (German)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("TL")}>
+                  Filipino (Tagalog)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("TH")}>
+                  ไทย (Thai)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("ID")}>
+                  Bahasa Indonesia
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Button variant="ghost" size="icon" onClick={() => setShowBooking(true)}>
               <i className="ri-calendar-line text-xl" />
             </Button>
