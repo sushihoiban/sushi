@@ -39,7 +39,7 @@ const Auth = () => {
         <div className="w-full max-w-md">
           {/* Logo Section */}
           <div className="text-center mb-8">
-            <img src={logo} alt="HÓI BÁN SUSHI" className="w-32 h-32 mx-auto mb-4" />
+            <img src={logo} alt="HÓI BÁN SUSHI" className="w-48 h-48 mx-auto mb-4" />
             <h1 className="text-3xl font-bold mb-2">HÓI BÁN SUSHI</h1>
             <p className="text-primary text-sm">Premium Japanese Dining Experience</p>
           </div>

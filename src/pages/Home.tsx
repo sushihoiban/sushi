@@ -87,7 +87,7 @@ const Home = () => {
         </div>
         
         <div className="relative z-10 container mx-auto px-6 text-center">
-          <img src={logo} alt="Logo" className="w-40 h-40 mx-auto mb-6" />
+          <img src={logo} alt="Logo" className="w-48 h-48 mx-auto mb-6" />
           <h2 className="text-5xl font-bold mb-4">Premium Japanese Dining</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Authentic flavors crafted with precision and passion, bringing you the finest sushi and Japanese cuisine in an exclusive atmosphere
