@@ -1,11 +1,11 @@
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface BottomNavProps {
-  onCartClick?: () => void;
+  onBookingClick?: () => void;
   onProfileClick?: () => void;
 }
 
-const BottomNav = ({ onCartClick, onProfileClick }: BottomNavProps) => {
+const BottomNav = ({ onBookingClick, onProfileClick }: BottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,11 +35,11 @@ const BottomNav = ({ onCartClick, onProfileClick }: BottomNavProps) => {
         </button>
 
         <button
-          onClick={onCartClick}
+          onClick={onBookingClick}
           className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary"
         >
-          <i className="ri-shopping-cart-line text-2xl" />
-          <span className="text-xs">Cart</span>
+          <i className="ri-calendar-line text-2xl" />
+          <span className="text-xs">Book</span>
         </button>
 
         <button

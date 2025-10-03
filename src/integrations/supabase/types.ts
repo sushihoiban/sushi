@@ -14,7 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          party_size: number
+          table_id: string
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          party_size: number
+          table_id: string
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          party_size?: number
+          table_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_tables: {
+        Row: {
+          created_at: string
+          id: string
+          seats: number
+          table_number: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seats: number
+          table_number: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seats?: number
+          table_number?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

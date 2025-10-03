@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MenuItemCard from "@/components/MenuItemCard";
-import CartModal from "@/components/CartModal";
+import BookingModal from "@/components/BookingModal";
+import ProfileModal from "@/components/ProfileModal";
 import BottomNav from "@/components/BottomNav";
 import MobileTopBar from "@/components/MobileTopBar";
 const Menu = () => {
   const navigate = useNavigate();
-  const [showCart, setShowCart] = useState(false);
+  const [showBooking, setShowBooking] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const menuCategories = {
     combos: [{
       id: 1,
@@ -132,10 +134,10 @@ const Menu = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setShowCart(true)}>
-              <i className="ri-shopping-cart-line text-xl" />
+            <Button variant="ghost" size="icon" onClick={() => setShowBooking(true)}>
+              <i className="ri-calendar-line text-xl" />
             </Button>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={() => setShowProfile(true)}>
               <i className="ri-user-line text-xl" />
             </Button>
           </div>
@@ -183,12 +185,13 @@ const Menu = () => {
         </Tabs>
       </div>
 
-      <CartModal open={showCart} onOpenChange={setShowCart} />
+      <BookingModal open={showBooking} onOpenChange={setShowBooking} />
+      <ProfileModal open={showProfile} onOpenChange={setShowProfile} />
       
       {/* Mobile Bottom Navigation */}
       <BottomNav 
-        onCartClick={() => setShowCart(true)}
-        onProfileClick={() => {/* TODO: Add profile modal */}}
+        onBookingClick={() => setShowBooking(true)}
+        onProfileClick={() => setShowProfile(true)}
       />
     </div>;
 };

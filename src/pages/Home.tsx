@@ -6,13 +6,13 @@ import logo from "@/assets/logo.png";
 import heroBg from "@/assets/hero-bg.jpg";
 import MenuItemCard from "@/components/MenuItemCard";
 import BookingModal from "@/components/BookingModal";
-import CartModal from "@/components/CartModal";
+import ProfileModal from "@/components/ProfileModal";
 import BottomNav from "@/components/BottomNav";
 import MobileTopBar from "@/components/MobileTopBar";
 const Home = () => {
   const navigate = useNavigate();
   const [showBooking, setShowBooking] = useState(false);
-  const [showCart, setShowCart] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const featuredItems = [{
     id: 1,
     title: "97. Combo 1",
@@ -162,12 +162,12 @@ const Home = () => {
 
       {/* Modals */}
       <BookingModal open={showBooking} onOpenChange={setShowBooking} />
-      <CartModal open={showCart} onOpenChange={setShowCart} />
+      <ProfileModal open={showProfile} onOpenChange={setShowProfile} />
       
       {/* Mobile Bottom Navigation */}
       <BottomNav 
-        onCartClick={() => setShowCart(true)}
-        onProfileClick={() => {/* TODO: Add profile modal */}}
+        onBookingClick={() => setShowBooking(true)}
+        onProfileClick={() => setShowProfile(true)}
       />
     </div>;
 };

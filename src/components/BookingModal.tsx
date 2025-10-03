@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingModalProps {
   open: boolean;
@@ -13,13 +14,94 @@ const BookingModal = ({ open, onOpenChange }: BookingModalProps) => {
   const [partySize, setPartySize] = useState(2);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("18:00");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [availableTables, setAvailableTables] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const timeSlots = ["11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"];
 
-  const handleBooking = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (open && selectedDate && selectedTime) {
+      checkAvailability();
+    }
+  }, [open, selectedDate, selectedTime, partySize]);
+
+  const checkAvailability = async () => {
+    setLoading(true);
+    try {
+      // Get all tables
+      const { data: tables, error: tablesError } = await supabase
+        .from('restaurant_tables')
+        .select('*')
+        .gte('seats', partySize)
+        .order('seats');
+
+      if (tablesError) throw tablesError;
+
+      // Get existing bookings for the selected date and time
+      const { data: bookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('table_id')
+        .eq('booking_date', selectedDate)
+        .eq('booking_time', selectedTime);
+
+      if (bookingsError) throw bookingsError;
+
+      const bookedTableIds = bookings?.map(b => b.table_id) || [];
+      const available = tables?.filter(t => !bookedTableIds.includes(t.id)) || [];
+      
+      setAvailableTables(available);
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      toast.error('Failed to check availability');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Table reserved successfully! We look forward to serving you.");
-    onOpenChange(false);
+    
+    if (!customerName || !customerPhone) {
+      toast.error('Please fill in your contact information');
+      return;
+    }
+
+    if (availableTables.length === 0) {
+      toast.error('No tables available for this time');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Book the first available table that fits
+      const tableToBook = availableTables[0];
+      
+      const { error } = await supabase
+        .from('bookings')
+        .insert({
+          table_id: tableToBook.id,
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          party_size: partySize,
+          booking_date: selectedDate || dates[0].date,
+          booking_time: selectedTime
+        });
+
+      if (error) throw error;
+
+      toast.success(`Table ${tableToBook.table_number} reserved successfully! We look forward to serving you.`);
+      setCustomerName("");
+      setCustomerPhone("");
+      setPartySize(2);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      toast.error('Failed to create booking. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Generate next 7 days
@@ -115,16 +197,33 @@ const BookingModal = ({ open, onOpenChange }: BookingModalProps) => {
             <Input
               type="text"
               placeholder="Your Name"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
               required
               className="bg-secondary border-border"
             />
             <Input
               type="tel"
               placeholder="Phone Number"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
               required
               className="bg-secondary border-border"
             />
           </div>
+
+          {/* Availability Info */}
+          {selectedDate && selectedTime && (
+            <div className={`p-4 rounded-lg text-sm ${availableTables.length > 0 ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+              {loading ? (
+                <p><i className="ri-loader-4-line mr-2 animate-spin" />Checking availability...</p>
+              ) : availableTables.length > 0 ? (
+                <p><i className="ri-checkbox-circle-line mr-2 text-green-500" />{availableTables.length} table(s) available for {partySize} guest(s)</p>
+              ) : (
+                <p><i className="ri-close-circle-line mr-2 text-red-500" />No tables available for this time. Please select another time.</p>
+              )}
+            </div>
+          )}
 
           {/* Info */}
           <div className="bg-secondary p-4 rounded-lg text-sm text-muted-foreground space-y-2">
@@ -144,9 +243,10 @@ const BookingModal = ({ open, onOpenChange }: BookingModalProps) => {
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={loading || availableTables.length === 0}
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              Confirm Reservation
+              {loading ? 'Processing...' : 'Confirm Reservation'}
             </Button>
           </div>
         </form>
