@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MenuItemCard from "@/components/MenuItemCard";
 import CartModal from "@/components/CartModal";
 import BottomNav from "@/components/BottomNav";
+import MobileTopBar from "@/components/MobileTopBar";
 const Menu = () => {
   const navigate = useNavigate();
   const [showCart, setShowCart] = useState(false);
@@ -113,7 +114,10 @@ const Menu = () => {
     }]
   };
   return <div className="min-h-screen pb-20 md:pb-12">
-      {/* Top Navigation */}
+      {/* Mobile Top Bar */}
+      <MobileTopBar />
+      
+      {/* Desktop Top Navigation */}
       <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 glass-effect border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
@@ -139,40 +143,40 @@ const Menu = () => {
       </nav>
 
       {/* Menu Content */}
-      <div className="container mx-auto px-6 pt-8 md:pt-24">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Our Menu</h1>
-          <p className="text-muted-foreground">Explore our exquisite selection of Japanese cuisine</p>
+      <div className="container mx-auto px-4 md:px-6 pt-16 md:pt-24">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-1 md:mb-2">Our Menu</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Explore our exquisite selection of Japanese cuisine</p>
         </div>
 
         <Tabs defaultValue="combos" className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-8 bg-secondary">
-            <TabsTrigger value="combos">Sushi Combos</TabsTrigger>
-            <TabsTrigger value="hot">Hot Dishes</TabsTrigger>
-            <TabsTrigger value="noodles">Noodles & Rice</TabsTrigger>
-            <TabsTrigger value="beverages">Beverages</TabsTrigger>
+          <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6 md:mb-8 bg-secondary text-xs md:text-sm">
+            <TabsTrigger value="combos" className="px-2 md:px-4">Sushi Combos</TabsTrigger>
+            <TabsTrigger value="hot" className="px-2 md:px-4">Hot Dishes</TabsTrigger>
+            <TabsTrigger value="noodles" className="px-2 md:px-4">Noodles</TabsTrigger>
+            <TabsTrigger value="beverages" className="px-2 md:px-4">Beverages</TabsTrigger>
           </TabsList>
 
           <TabsContent value="combos">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {menuCategories.combos.map(item => <MenuItemCard key={item.id} item={item} />)}
             </div>
           </TabsContent>
 
           <TabsContent value="hot">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {menuCategories.hot.map(item => <MenuItemCard key={item.id} item={item} />)}
             </div>
           </TabsContent>
 
           <TabsContent value="noodles">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {menuCategories.noodles.map(item => <MenuItemCard key={item.id} item={item} />)}
             </div>
           </TabsContent>
 
           <TabsContent value="beverages">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {menuCategories.beverages.map(item => <MenuItemCard key={item.id} item={item} />)}
             </div>
           </TabsContent>

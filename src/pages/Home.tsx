@@ -8,6 +8,7 @@ import MenuItemCard from "@/components/MenuItemCard";
 import BookingModal from "@/components/BookingModal";
 import CartModal from "@/components/CartModal";
 import BottomNav from "@/components/BottomNav";
+import MobileTopBar from "@/components/MobileTopBar";
 const Home = () => {
   const navigate = useNavigate();
   const [showBooking, setShowBooking] = useState(false);
@@ -39,7 +40,10 @@ const Home = () => {
     image: "https://images.unsplash.com/photo-1618841557871-b4664fbf0cb3?w=400&h=300&fit=crop"
   }];
   return <div className="min-h-screen pb-20 md:pb-0">
-      {/* Top Navigation */}
+      {/* Mobile Top Bar */}
+      <MobileTopBar />
+
+      {/* Desktop Top Navigation */}
       <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 glass-effect border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
@@ -66,7 +70,7 @@ const Home = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-8 md:pt-24 pb-20 overflow-hidden">
+      <section className="relative pt-16 md:pt-24 pb-8 md:pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center" style={{
         backgroundImage: `url(${heroBg})`
       }}>
@@ -74,12 +78,12 @@ const Home = () => {
         </div>
         
         <div className="relative z-10 container mx-auto px-6 text-center">
-          <img src={logo} alt="Logo" className="w-48 h-48 mx-auto mb-6" />
-          <h2 className="text-5xl font-bold mb-4">Premium Japanese Dining</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+          <img src={logo} alt="Logo" className="w-32 h-32 md:w-48 md:h-48 mx-auto mb-4 md:mb-6" />
+          <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">Premium Japanese Dining Experience</h2>
+          <p className="text-sm md:text-xl text-muted-foreground max-w-md md:max-w-2xl mx-auto mb-6 md:mb-8 px-4">
             Authentic flavors crafted with precision and passion, bringing you the finest sushi and Japanese cuisine in an exclusive atmosphere
           </p>
-          <div className="flex items-center justify-center gap-4">
+          <div className="hidden md:flex items-center justify-center gap-4">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-elegant" onClick={() => setShowBooking(true)}>
               <i className="ri-calendar-line mr-2" />
               Reserve a Table
@@ -93,38 +97,38 @@ const Home = () => {
       </section>
 
       {/* Quick Actions */}
-      <section className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          <Card className="glass-effect border-border/50 p-8 text-center hover:shadow-elegant transition-all cursor-pointer" onClick={() => setShowBooking(true)}>
-            <div className="w-16 h-16 mx-auto mb-4 bg-primary/20 rounded-full flex items-center justify-center">
-              <i className="ri-calendar-line text-primary text-3xl" />
+      <section className="container mx-auto px-4 md:px-6 py-6 md:py-12">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto">
+          <Card className="glass-effect border-border/50 p-6 md:p-8 text-center hover:shadow-elegant transition-all cursor-pointer" onClick={() => setShowBooking(true)}>
+            <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-primary/20 rounded-full flex items-center justify-center">
+              <i className="ri-calendar-line text-primary text-2xl md:text-3xl" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Table Booking</h3>
-            <p className="text-muted-foreground">Reserve your spot for an unforgettable dining experience</p>
+            <h3 className="text-base md:text-xl font-semibold mb-1 md:mb-2">Table Booking</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">Reserve your spot</p>
           </Card>
           
-          <Card className="glass-effect border-border/50 p-8 text-center hover:shadow-elegant transition-all cursor-pointer" onClick={() => navigate('/menu')}>
-            <div className="w-16 h-16 mx-auto mb-4 bg-primary/20 rounded-full flex items-center justify-center">
-              <i className="ri-restaurant-line text-primary text-3xl" />
+          <Card className="glass-effect border-border/50 p-6 md:p-8 text-center hover:shadow-elegant transition-all cursor-pointer" onClick={() => navigate('/menu')}>
+            <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-primary/20 rounded-full flex items-center justify-center">
+              <i className="ri-restaurant-line text-primary text-2xl md:text-3xl" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">View Menu</h3>
-            <p className="text-muted-foreground">Explore our exquisite selection of Japanese cuisine</p>
+            <h3 className="text-base md:text-xl font-semibold mb-1 md:mb-2">Takeaway Order</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">Quick pickup</p>
           </Card>
         </div>
       </section>
 
       {/* Featured Menu */}
-      <section className="container mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Featured Combos</h2>
-          <p className="text-muted-foreground">Discover our most popular dishes</p>
+      <section className="container mx-auto px-4 md:px-6 py-6 md:py-12">
+        <div className="mb-4 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Featured Combos</h2>
+          <p className="text-sm md:text-base text-muted-foreground hidden md:block">Discover our most popular dishes</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {featuredItems.map(item => <MenuItemCard key={item.id} item={item} />)}
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center mt-6 md:mt-12">
           <Button size="lg" variant="outline" onClick={() => navigate('/menu')}>
             View Full Menu
             <i className="ri-arrow-right-line ml-2" />
@@ -133,7 +137,7 @@ const Home = () => {
       </section>
 
       {/* Restaurant Info */}
-      <section className="container mx-auto px-6 py-12">
+      <section className="container mx-auto px-4 md:px-6 py-6 md:py-12 hidden md:block">
         <Card className="glass-effect border-border/50 p-8">
           <h2 className="text-2xl font-bold mb-6 text-center">Visit Our Restaurant</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
