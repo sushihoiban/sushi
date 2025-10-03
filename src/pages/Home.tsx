@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo-hoi-ban-sushi.png";
 import heroBg from "@/assets/hero-bg.jpg";
 import MenuItemCard from "@/components/MenuItemCard";
 import BookingModal from "@/components/BookingModal";
@@ -111,8 +111,8 @@ const Home = () => {
             <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-primary/20 rounded-full flex items-center justify-center">
               <i className="ri-restaurant-line text-primary text-2xl md:text-3xl" />
             </div>
-            <h3 className="text-base md:text-xl font-semibold mb-1 md:mb-2">Takeaway Order</h3>
-            <p className="text-xs md:text-sm text-muted-foreground">Quick pickup</p>
+            <h3 className="text-base md:text-xl font-semibold mb-1 md:mb-2">View Menu</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">Browse our dishes</p>
           </Card>
         </div>
       </section>
