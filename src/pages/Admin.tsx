@@ -13,6 +13,8 @@ import TableAvailability from '@/components/TableAvailability';
 import TableManager from '@/components/TableManager';
 import AdminBooking from '@/components/AdminBooking';
 import { Database } from '@/integrations/supabase/types';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 type Booking = Database['public']['Tables']['bookings']['Row'] & {
     restaurant_tables: Database['public']['Tables']['restaurant_tables']['Row'];
@@ -63,12 +65,32 @@ const Admin = () => {
     fetchBookings();
     fetchTables();
   }, [fetchBookings, fetchTables]);
+  
+  const handleCancelBooking = async (bookingId: string) => {
+    if (window.confirm('Are you sure you want to cancel this booking?')) {
+        try {
+            const { error } = await supabase
+                .from('bookings')
+                .delete()
+                .eq('id', bookingId);
+            if (error) throw error;
+            toast.success('Booking cancelled successfully.');
+            fetchBookings(); // Refetch bookings to update the list
+        } catch (error: any) {
+            toast.error(`Failed to cancel booking: ${error.message}`);
+            console.error('Error cancelling booking:', error);
+        }
+    }
+  }
 
   const isLoading = loadingBookings || loadingTables;
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
+        <Link to="/home" className="text-sm text-primary hover:underline mb-4 inline-block">
+            &larr; Back to Home
+        </Link>
+        <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
       
       <div className="mb-8">
         <AdminBooking onBookingCreated={fetchBookings} />
@@ -108,8 +130,12 @@ const Admin = () => {
                 <TableCell>{booking.booking_date}</TableCell>
                 <TableCell>{booking.booking_time}</TableCell>
                 <TableCell>
-                    <Button variant="destructive" size="sm">
-                    Cancel
+                    <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => handleCancelBooking(booking.id)}
+                    >
+                        Cancel
                     </Button>
                 </TableCell>
                 </TableRow>
