@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -166,6 +167,24 @@ export type Database = {
             };
             Returns: string;
         };
+        cancel_booking_group: {
+            Args: {
+                p_group_id: string;
+            };
+            Returns: undefined;
+        };
+        update_booking_group: {
+            Args: {
+                p_group_id_to_cancel: string;
+                p_customer_name: string;
+                p_customer_phone: string;
+                p_new_table_ids: string[];
+                p_new_party_size: number;
+                p_booking_date: string;
+                p_booking_time: string;
+            };
+            Returns: string;
+        }
     }
     Enums: {
       [_ in never]: never

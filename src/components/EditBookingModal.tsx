@@ -3,60 +3,76 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
+import { useBooking } from "@/hooks/use-booking";
+import { format, parse } from 'date-fns';
 
-type Booking = Database['public']['Tables']['bookings']['Row'] & { customers: Database['public']['Tables']['customers']['Row'] | null, restaurant_tables: Database['public']['Tables']['restaurant_tables']['Row'] | null };
-type Customer = Database['public']['Tables']['customers']['Row'];
-type Table = Database['public']['Tables']['restaurant_tables']['Row'];
+// This must match the group interface in AdminBookings.tsx
+interface BookingGroup {
+    group_id: string;
+    bookings: any[];
+    total_party_size: number;
+    customer: { name: string, phone: string | null } | null;
+    booking_date: string;
+    booking_time: string;
+}
 
 interface EditBookingModalProps {
-  booking: Booking | null;
+  bookingGroup: BookingGroup | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBookingUpdated: () => void;
 }
 
-const EditBookingModal = ({ booking, open, onOpenChange, onBookingUpdated }: EditBookingModalProps) => {
+const EditBookingModal = ({ bookingGroup, open, onOpenChange, onBookingUpdated }: EditBookingModalProps) => {
+    const { timeSlotAvailability, loading: checkingAvailability, checkAllAvailability, lunchTimeSlots, dinnerTimeSlots } = useBooking();
+
     const [partySize, setPartySize] = useState(0);
     const [bookingDate, setBookingDate] = useState("");
     const [bookingTime, setBookingTime] = useState("");
-    const [selectedTableId, setSelectedTableId] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [allTables, setAllTables] = useState<Table[]>([]);
+    const [loadingUpdate, setLoadingUpdate] = useState(false);
 
     useEffect(() => {
-        const fetchTables = async () => {
-            const { data } = await supabase.from('restaurant_tables').select('*');
-            setAllTables(data || []);
+        if (bookingGroup) {
+            setPartySize(bookingGroup.total_party_size);
+            setBookingDate(bookingGroup.booking_date);
+            setBookingTime(bookingGroup.booking_time.substring(0, 5));
         }
-        fetchTables();
-    }, []);
-
+    }, [bookingGroup]);
+    
+    // Re-check availability whenever the edit form details change
     useEffect(() => {
-        if (booking) {
-            setPartySize(booking.party_size);
-            setBookingDate(booking.booking_date);
-            setBookingTime(booking.booking_time.substring(0,5));
-            setSelectedTableId(booking.table_id);
+        if(open && bookingDate) {
+            checkAllAvailability(bookingDate, partySize)
         }
-    }, [booking]);
+    }, [open, bookingDate, partySize, checkAllAvailability]);
+
 
     const handleUpdate = async () => {
-        if (!booking) return;
-        setLoading(true);
+        if (!bookingGroup || !bookingGroup.customer) return;
+
+        setLoadingUpdate(true);
         try {
-            const { error } = await supabase
-                .from('bookings')
-                .update({
-                    party_size: partySize,
-                    booking_date: bookingDate,
-                    booking_time: bookingTime,
-                    table_id: selectedTableId
-                })
-                .eq('id', booking.id);
+            // Step 1: Find an available slot for the *new* party size and time
+            const newSlot = timeSlotAvailability[bookingTime];
+            if (!newSlot || !newSlot.available) {
+                toast.error("No tables available for the updated booking details. Please try another time or party size.");
+                setLoadingUpdate(false);
+                return;
+            }
+            const newTableIds = newSlot.tables.map(t => t.id);
+
+            // Step 2: Call the RPC function to handle the update
+            const { error } = await supabase.rpc('update_booking_group', {
+                p_group_id_to_cancel: bookingGroup.group_id,
+                p_customer_name: bookingGroup.customer.name,
+                p_customer_phone: bookingGroup.customer.phone,
+                p_new_table_ids: newTableIds,
+                p_new_party_size: partySize,
+                p_booking_date: bookingDate,
+                p_booking_time: bookingTime
+            });
 
             if (error) throw error;
             toast.success("Booking updated successfully!");
@@ -66,12 +82,9 @@ const EditBookingModal = ({ booking, open, onOpenChange, onBookingUpdated }: Edi
         } catch (error: any) {
             toast.error(`Update failed: ${error.message}`);
         } finally {
-            setLoading(false);
+            setLoadingUpdate(false);
         }
     };
-    
-    const timeSlots = ["11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"];
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -80,7 +93,7 @@ const EditBookingModal = ({ booking, open, onOpenChange, onBookingUpdated }: Edi
         <div className="space-y-4">
             <div>
                 <Label>Party Size</Label>
-                <Input type="number" value={partySize} onChange={e => setPartySize(parseInt(e.target.value) || 0)} />
+                <Input type="number" value={partySize} onChange={e => setPartySize(Math.max(1, parseInt(e.target.value) || 1))} />
             </div>
             <div>
                 <Label>Date</Label>
@@ -88,19 +101,22 @@ const EditBookingModal = ({ booking, open, onOpenChange, onBookingUpdated }: Edi
             </div>
             <div>
                 <Label>Time</Label>
-                <Select value={bookingTime} onValueChange={setBookingTime}>
-                    <SelectTrigger><SelectValue/></SelectTrigger>
-                    <SelectContent>{timeSlots.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                </Select>
+                {checkingAvailability ? <div className="text-sm text-muted-foreground">Checking availability...</div> : (
+                     <div className="grid grid-cols-4 gap-2">
+                        {[...lunchTimeSlots, ...dinnerTimeSlots].map(time => (
+                            <Button
+                                key={time}
+                                variant={bookingTime === time ? "default" : "outline"}
+                                onClick={() => setBookingTime(time)}
+                                disabled={!timeSlotAvailability[time]?.available && bookingTime !== time}
+                            >
+                                {time}
+                            </Button>
+                        ))}
+                     </div>
+                )}
             </div>
-             <div>
-                <Label>Table</Label>
-                <Select value={selectedTableId} onValueChange={setSelectedTableId}>
-                    <SelectTrigger><SelectValue/></SelectTrigger>
-                    <SelectContent>{allTables.map(t => <SelectItem key={t.id} value={t.id}>T{t.table_number} ({t.seats} seats)</SelectItem>)}</SelectContent>
-                </Select>
-            </div>
-            <Button onClick={handleUpdate} disabled={loading}>{loading ? 'Updating...' : 'Save Changes'}</Button>
+            <Button onClick={handleUpdate} disabled={loadingUpdate || checkingAvailability}>{loadingUpdate ? 'Updating...' : 'Save Changes'}</Button>
         </div>
       </DialogContent>
     </Dialog>
