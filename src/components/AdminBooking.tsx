@@ -126,9 +126,9 @@ const AdminBooking = ({ onBookingCreated }: AdminBookingProps) => {
       setBookingDate('');
       setBookingTime('');
       onBookingCreated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating booking:', error);
-      toast.error('Failed to create booking. Please try again.');
+      toast.error(`Failed to create booking: ${error.message}`);
     } finally {
       setLoading(false);
     }

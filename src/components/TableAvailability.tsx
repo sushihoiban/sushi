@@ -1,33 +1,18 @@
-import { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Database } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
 
-type Table = Database['public']['Tables']['restaurant_tables']['Row'];
+type TableRowType = Database['public']['Tables']['restaurant_tables']['Row'];
 
-const TableAvailability = () => {
-  const [tables, setTables] = useState<Table[]>([]);
-  const [loading, setLoading] = useState(true);
+interface TableAvailabilityProps {
+    tables: TableRowType[];
+    onTablesUpdate: () => void;
+}
 
-  useEffect(() => {
-    const fetchTables = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('restaurant_tables')
-          .select('*');
-        if (error) throw error;
-        setTables(data || []);
-      } catch (error) {
-        console.error('Error fetching tables:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTables();
-  }, []);
-
+const TableAvailability = ({ tables, onTablesUpdate }: TableAvailabilityProps) => {
+    
   const handleAvailabilityChange = async (
     tableId: string,
     newStatus: boolean
@@ -38,18 +23,16 @@ const TableAvailability = () => {
         .update({ is_available: newStatus })
         .eq('id', tableId);
       if (error) throw error;
-      setTables((prevTables) =>
-        prevTables.map((table) =>
-          table.id === tableId ? { ...table, is_available: newStatus } : table
-        )
-      );
+      toast.success(`Table availability updated.`);
+      onTablesUpdate();
     } catch (error) {
       console.error('Error updating table availability:', error);
+      toast.error('Failed to update table availability.');
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
+  if (!tables) {
+    return <div>Loading table data...</div>;
   }
 
   return (

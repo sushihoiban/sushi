@@ -12,46 +12,32 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { toast } from 'sonner';
 
 type TableRowType = Database['public']['Tables']['restaurant_tables']['Row'];
 
-const TableManager = () => {
-  const [tables, setTables] = useState<TableRowType[]>([]);
-  const [loading, setLoading] = useState(true);
+interface TableManagerProps {
+    tables: TableRowType[];
+    onTablesUpdate: () => void;
+}
+
+const TableManager = ({ tables, onTablesUpdate }: TableManagerProps) => {
   const [newTableNumber, setNewTableNumber] = useState('');
   const [newTableSeats, setNewTableSeats] = useState('');
   const [editingSeats, setEditingSeats] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    fetchTables();
-  }, []);
-
-  const fetchTables = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('restaurant_tables')
-        .select('*')
-        .order('table_number', { ascending: true });
-      if (error) throw error;
-      setTables(data || []);
-      const seatsState: { [key: string]: number } = {};
-      if (data) {
-        data.forEach(table => {
-            seatsState[table.id] = table.seats;
-        });
-      }
-      setEditingSeats(seatsState);
-    } catch (error) {
-      console.error('Error fetching tables:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Sync editingSeats state when the tables prop changes
+    const seatsState: { [key: string]: number } = {};
+    tables.forEach(table => {
+        seatsState[table.id] = table.seats;
+    });
+    setEditingSeats(seatsState);
+  }, [tables]);
 
   const handleAddTable = async () => {
     if (!newTableNumber || !newTableSeats) {
-      alert('Please enter a table number and number of seats.');
+      toast.error('Please enter a table number and number of seats.');
       return;
     }
     try {
@@ -62,9 +48,11 @@ const TableManager = () => {
       if (error) throw error;
       setNewTableNumber('');
       setNewTableSeats('');
-      fetchTables();
+      toast.success('Table added successfully!');
+      onTablesUpdate(); // Trigger refetch in parent
     } catch (error) {
       console.error('Error adding table:', error);
+      toast.error('Failed to add table.');
     }
   };
 
@@ -76,10 +64,11 @@ const TableManager = () => {
         .update({ seats })
         .eq('id', tableId);
       if (error) throw error;
-      alert('Table updated successfully!');
-      fetchTables();
+      toast.success('Table updated successfully!');
+      onTablesUpdate();
     } catch (error) {
       console.error('Error updating table seats:', error);
+      toast.error('Failed to update table.');
     }
   };
 
@@ -93,10 +82,11 @@ const TableManager = () => {
             .delete()
             .eq('id', tableId);
         if (error) throw error;
-        fetchTables();
+        toast.success('Table deleted successfully!');
+        onTablesUpdate();
     } catch (error) {
         console.error('Error deleting table:', error);
-        alert(`Error: ${error.message}`);
+        toast.error(`Error: ${error.message}`);
     }
   }
 
@@ -106,10 +96,6 @@ const TableManager = () => {
         [tableId]: parseInt(seats, 10) || 0,
     }));
   };
-
-  if (loading) {
-    return <div>Loading table data...</div>;
-  }
 
   return (
     <div>
@@ -154,7 +140,7 @@ const TableManager = () => {
                         <TableCell>
                             <Input
                                 type="number"
-                                value={editingSeats[table.id] || ''}
+                                value={editingSeats[table.id] ?? ''}
                                 onChange={(e) => handleSeatChange(table.id, e.target.value)}
                                 className="w-24"
                             />
