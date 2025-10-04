@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import logo from "@/assets/logo-hoi-ban-sushi.png";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/hero-image-bg.jpg";
 import MenuItemCard from "@/components/MenuItemCard";
 import BookingModal from "@/components/BookingModal";
 import ProfileModal from "@/components/ProfileModal";

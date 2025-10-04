@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,52 +13,61 @@ interface BookingModalProps {
 const BookingModal = ({ open, onOpenChange }: BookingModalProps) => {
   const [partySize, setPartySize] = useState(2);
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedTime, setSelectedTime] = useState<string>("18:00");
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [availableTables, setAvailableTables] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  
+  const [timeSlotAvailability, setTimeSlotAvailability] = useState<Record<string, boolean>>({});
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+  const [loadingBooking, setLoadingBooking] = useState(false);
 
-  const timeSlots = ["11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"];
+  const lunchTimeSlots = ["11:30", "12:00", "12:30", "13:00", "13:30", "14:00"];
+  const dinnerTimeSlots = ["17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"];
+  const allTimeSlots = [...lunchTimeSlots, ...dinnerTimeSlots];
+
+  const checkAllAvailability = useCallback(async () => {
+    if (!selectedDate || !open) return;
+
+    setLoadingAvailability(true);
+    const availability: Record<string, boolean> = {};
+
+    for (const time of allTimeSlots) {
+        try {
+            const { data, error } = await supabase.rpc('get_available_tables', {
+                p_booking_date: selectedDate,
+                p_booking_time: time,
+                p_party_size: partySize,
+            });
+
+            if (error) throw error;
+            availability[time] = data && data.length > 0;
+        } catch (error) {
+            console.error(`Error checking availability for ${time}:`, error);
+            availability[time] = false; // Assume unavailable on error
+        }
+    }
+    
+    setTimeSlotAvailability(availability);
+    setLoadingAvailability(false);
+  }, [selectedDate, partySize, open]);
 
   useEffect(() => {
-    if (open && selectedDate && selectedTime) {
-      checkAvailability();
+    // Set default date to today when modal opens
+    if (open && !selectedDate) {
+      const today = new Date().toISOString().split('T')[0];
+      setSelectedDate(today);
     }
-  }, [open, selectedDate, selectedTime, partySize]);
-
-  const checkAvailability = async () => {
-    setLoading(true);
-    try {
-      // Get all tables
-      const { data: tables, error: tablesError } = await supabase
-        .from('restaurant_tables')
-        .select('*')
-        .gte('seats', partySize)
-        .order('seats');
-
-      if (tablesError) throw tablesError;
-
-      // Get existing bookings for the selected date and time
-      const { data: bookings, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('table_id')
-        .eq('booking_date', selectedDate)
-        .eq('booking_time', selectedTime);
-
-      if (bookingsError) throw bookingsError;
-
-      const bookedTableIds = bookings?.map(b => b.table_id) || [];
-      const available = tables?.filter(t => !bookedTableIds.includes(t.id)) || [];
-      
-      setAvailableTables(available);
-    } catch (error) {
-      console.error('Error checking availability:', error);
-      toast.error('Failed to check availability');
-    } finally {
-      setLoading(false);
+    // Reset state when modal is closed
+    if (!open) {
+        setSelectedTime(null);
+        setTimeSlotAvailability({});
     }
-  };
+  }, [open, selectedDate]);
+
+  useEffect(() => {
+    checkAllAvailability();
+  }, [checkAllAvailability]);
+  
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,44 +76,50 @@ const BookingModal = ({ open, onOpenChange }: BookingModalProps) => {
       toast.error('Please fill in your contact information');
       return;
     }
-
-    if (availableTables.length === 0) {
-      toast.error('No tables available for this time');
-      return;
+    if (!selectedTime || !selectedDate) {
+        toast.error('Please select a date and time');
+        return;
     }
 
-    setLoading(true);
+    setLoadingBooking(true);
     try {
-      // Book the first available table that fits
-      const tableToBook = availableTables[0];
-      
-      const { error } = await supabase
-        .from('bookings')
-        .insert({
-          table_id: tableToBook.id,
-          customer_name: customerName,
-          customer_phone: customerPhone,
-          party_size: partySize,
-          booking_date: selectedDate || dates[0].date,
-          booking_time: selectedTime
-        });
+      // Re-fetch available tables for the selected slot to get the best fit
+      const { data: tables, error: tablesError } = await supabase.rpc('get_available_tables', {
+        p_booking_date: selectedDate,
+        p_booking_time: selectedTime,
+        p_party_size: partySize,
+      });
 
-      if (error) throw error;
+      if (tablesError || !tables || tables.length === 0) {
+        toast.error('Sorry, the selected time slot is no longer available. Please choose another time.');
+        checkAllAvailability(); // Refresh availability
+        setLoadingBooking(false);
+        return;
+      }
+      
+      const tableToBook = tables[0]; // The function returns them sorted by seats, so this is the best fit
+
+      const { error: bookingError } = await supabase.rpc('create_booking_with_customer', {
+        p_customer_name: customerName,
+        p_customer_phone: customerPhone,
+        p_table_id: tableToBook.id,
+        p_party_size: partySize,
+        p_booking_date: selectedDate,
+        p_booking_time: selectedTime,
+      });
+
+      if (bookingError) throw bookingError;
 
       toast.success(`Table ${tableToBook.table_number} reserved successfully! We look forward to serving you.`);
-      setCustomerName("");
-      setCustomerPhone("");
-      setPartySize(2);
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error('Failed to create booking. Please try again.');
     } finally {
-      setLoading(false);
+      setLoadingBooking(false);
     }
   };
 
-  // Generate next 7 days
   const dates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() + i);
@@ -127,23 +142,11 @@ const BookingModal = ({ open, onOpenChange }: BookingModalProps) => {
           <div>
             <label className="block text-sm font-medium mb-3">Party Size</label>
             <div className="flex items-center justify-center gap-4 p-4 bg-secondary rounded-lg">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setPartySize(Math.max(1, partySize - 1))}
-                className="h-12 w-12 rounded-full"
-              >
+              <Button type="button" variant="outline" size="icon" onClick={() => setPartySize(Math.max(1, partySize - 1))} className="h-12 w-12 rounded-full">
                 <i className="ri-subtract-line text-xl" />
               </Button>
               <span className="text-3xl font-bold w-16 text-center">{partySize}</span>
-              <Button
-                type="button"
-                variant="default"
-                size="icon"
-                onClick={() => setPartySize(Math.min(20, partySize + 1))}
-                className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90"
-              >
+              <Button type="button" variant="default" size="icon" onClick={() => setPartySize(Math.min(20, partySize + 1))} className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90">
                 <i className="ri-add-line text-xl" />
               </Button>
             </div>
@@ -153,16 +156,12 @@ const BookingModal = ({ open, onOpenChange }: BookingModalProps) => {
           <div>
             <label className="block text-sm font-medium mb-3">Select Date</label>
             <div className="grid grid-cols-7 gap-2">
-              {dates.map((d, index) => (
+              {dates.map((d) => (
                 <button
                   key={d.date}
                   type="button"
                   onClick={() => setSelectedDate(d.date)}
-                  className={`p-3 rounded-lg text-center transition-colors ${
-                    selectedDate === d.date || (index === 0 && !selectedDate)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary hover:bg-secondary/80'
-                  }`}
+                  className={`p-3 rounded-lg text-center transition-colors ${selectedDate === d.date ? 'bg-primary text-primary-foreground' : 'bg-secondary hover:bg-secondary/80'}`}
                 >
                   <div className="text-xs">{d.dayName}</div>
                   <div className="font-semibold">{d.dayNum}</div>
@@ -174,79 +173,55 @@ const BookingModal = ({ open, onOpenChange }: BookingModalProps) => {
           {/* Time Selection */}
           <div>
             <label className="block text-sm font-medium mb-3">Select Time</label>
-            <div className="grid grid-cols-4 gap-2">
-              {timeSlots.map((time) => (
-                <button
-                  key={time}
-                  type="button"
-                  onClick={() => setSelectedTime(time)}
-                  className={`p-3 rounded-lg text-center transition-colors ${
-                    selectedTime === time
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary hover:bg-secondary/80'
-                  }`}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
+            {loadingAvailability ? (
+              <div className="text-center p-4">
+                <i className="ri-loader-4-line mr-2 animate-spin" /> Checking available times...
+              </div>
+            ) : (
+                <>
+                    <p className="text-xs text-muted-foreground mb-2">Lunch</p>
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                        {lunchTimeSlots.map((time) => (
+                        <button
+                            key={time}
+                            type="button"
+                            disabled={!timeSlotAvailability[time]}
+                            onClick={() => setSelectedTime(time)}
+                            className={`p-3 rounded-lg text-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${selectedTime === time ? 'bg-primary text-primary-foreground' : 'bg-secondary hover:bg-secondary/80'}`}
+                        >
+                            {time}
+                        </button>
+                        ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">Dinner</p>
+                    <div className="grid grid-cols-4 gap-2">
+                        {dinnerTimeSlots.map((time) => (
+                        <button
+                            key={time}
+                            type="button"
+                            disabled={!timeSlotAvailability[time]}
+                            onClick={() => setSelectedTime(time)}
+                            className={`p-3 rounded-lg text-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${selectedTime === time ? 'bg-primary text-primary-foreground' : 'bg-secondary hover:bg-secondary/80'}`}
+                        >
+                            {time}
+                        </button>
+                        ))}
+                    </div>
+                </>
+            )}
           </div>
 
           {/* Contact Info */}
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              type="text"
-              placeholder="Your Name"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              required
-              className="bg-secondary border-border"
-            />
-            <Input
-              type="tel"
-              placeholder="Phone Number"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              required
-              className="bg-secondary border-border"
-            />
-          </div>
-
-          {/* Availability Info */}
-          {selectedDate && selectedTime && (
-            <div className={`p-4 rounded-lg text-sm ${availableTables.length > 0 ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-              {loading ? (
-                <p><i className="ri-loader-4-line mr-2 animate-spin" />Checking availability...</p>
-              ) : availableTables.length > 0 ? (
-                <p><i className="ri-checkbox-circle-line mr-2 text-green-500" />{availableTables.length} table(s) available for {partySize} guest(s)</p>
-              ) : (
-                <p><i className="ri-close-circle-line mr-2 text-red-500" />No tables available for this time. Please select another time.</p>
-              )}
-            </div>
-          )}
-
-          {/* Info */}
-          <div className="bg-secondary p-4 rounded-lg text-sm text-muted-foreground space-y-2">
-            <p><i className="ri-map-pin-line mr-2 text-primary" />Location: 43 An Hải 20, Đà Nẵng</p>
-            <p><i className="ri-information-line mr-2 text-primary" />Reservation confirmation will be sent via SMS</p>
+            <Input type="text" placeholder="Your Name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} required className="bg-secondary border-border" />
+            <Input type="tel" placeholder="Phone Number" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} required className="bg-secondary border-border" />
           </div>
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading || availableTables.length === 0}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {loading ? 'Processing...' : 'Confirm Reservation'}
+            <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="submit" disabled={loadingBooking || !selectedTime} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+              {loadingBooking ? 'Processing...' : 'Confirm Reservation'}
             </Button>
           </div>
         </form>

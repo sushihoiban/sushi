@@ -2,6 +2,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface ProfileModalProps {
   open: boolean;
@@ -9,6 +13,20 @@ interface ProfileModalProps {
 }
 
 const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Failed to log out: " + error.message);
+    } else {
+      toast.success("You have been logged out.");
+      navigate("/");
+      onOpenChange(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-effect border-border/50 max-w-md">
@@ -24,10 +42,16 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                 <i className="ri-user-line text-3xl text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Guest User</h3>
-                <p className="text-sm text-muted-foreground">Welcome to our restaurant</p>
+                <h3 className="font-semibold">{user ? user.email : "Guest User"}</h3>
+                <p className="text-sm text-muted-foreground">{user ? "Welcome back!" : "Welcome to our restaurant"}</p>
               </div>
             </div>
+            {user && (
+              <Button variant="destructive" className="w-full" onClick={handleLogout}>
+                <i className="ri-logout-box-r-line mr-2" />
+                Log Out
+              </Button>
+            )}
           </Card>
 
           {/* Settings Options */}

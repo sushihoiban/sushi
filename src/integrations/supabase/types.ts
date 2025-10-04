@@ -19,33 +19,37 @@ export type Database = {
           booking_date: string
           booking_time: string
           created_at: string
-          customer_name: string
-          customer_phone: string
           id: string
           party_size: number
           table_id: string
+          customer_id: string | null
         }
         Insert: {
           booking_date: string
           booking_time: string
           created_at?: string
-          customer_name: string
-          customer_phone: string
           id?: string
           party_size: number
           table_id: string
+          customer_id?: string | null
         }
         Update: {
           booking_date?: string
           booking_time?: string
           created_at?: string
-          customer_name?: string
-          customer_phone?: string
           id?: string
           party_size?: number
           table_id?: string
+          customer_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_table_id_fkey"
             columns: ["table_id"]
@@ -55,22 +59,49 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          status: "regular" | "vip"
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          status?: "regular" | "vip"
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: "regular" | "vip"
+        }
+        Relationships: []
+      }
       restaurant_tables: {
         Row: {
           created_at: string
           id: string
+          is_available: boolean
           seats: number
           table_number: number
         }
         Insert: {
           created_at?: string
           id?: string
+          is_available?: boolean
           seats: number
           table_number: number
         }
         Update: {
           created_at?: string
           id?: string
+          is_available?: boolean
           seats?: number
           table_number?: number
         }
@@ -81,7 +112,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+        get_available_tables: {
+            Args: {
+                p_booking_date: string;
+                p_booking_time: string;
+                p_party_size: number;
+            };
+            Returns: Tables<'restaurant_tables'>[];
+        };
+        create_booking_with_customer: {
+            Args: {
+                p_customer_name: string;
+                p_customer_phone: string;
+                p_table_id: string;
+                p_party_size: number;
+                p_booking_date: string;
+                p_booking_time: string;
+            };
+            Returns: string;
+        };
     }
     Enums: {
       [_ in never]: never
