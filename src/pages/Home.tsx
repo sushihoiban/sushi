@@ -123,7 +123,7 @@ const Home = () => {
         <div className="absolute inset-0 bg-cover bg-center" style={{
         backgroundImage: `url(${heroBg})`
       }}>
-          <div className="absolute inset-0 hero-gradient opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background/90" />
         </div>
         
         <div className="relative z-10 container mx-auto px-6 text-center">

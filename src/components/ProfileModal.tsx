@@ -13,7 +13,7 @@ interface ProfileModalProps {
 }
 
 const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -26,6 +26,11 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
       onOpenChange(false);
     }
   };
+  
+  const goToAdmin = () => {
+    navigate("/admin");
+    onOpenChange(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,6 +61,23 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
 
           {/* Settings Options */}
           <div className="space-y-2">
+            {isAdmin && (
+                <>
+                <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3 h-auto py-3"
+                    onClick={goToAdmin}
+                >
+                    <i className="ri-settings-line text-xl" />
+                    <div className="text-left">
+                    <div className="font-medium">Admin Panel</div>
+                    <div className="text-xs text-muted-foreground">Manage bookings and tables</div>
+                    </div>
+                </Button>
+                <Separator />
+                </>
+            )}
+
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 h-auto py-3"

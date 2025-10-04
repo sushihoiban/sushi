@@ -9,19 +9,36 @@ import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import { useMemo } from "react";
 
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
-  const { session } = useAuth();
+  const { session, isAdmin, loading } = useAuth();
+
+  const routes = useMemo(() => {
+    if (loading) {
+      return <Route path="*" element={<div>Loading...</div>} />;
+    }
+
+    return (
+      <>
+        <Route path="/" element={!session ? <Auth /> : <Navigate to="/home" />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/menu" element={<Menu />} />
+        <Route 
+          path="/admin" 
+          element={session && isAdmin ? <Admin /> : <Navigate to="/home" />} 
+        />
+        <Route path="*" element={<NotFound />} />
+      </>
+    );
+  }, [session, isAdmin, loading]);
+
 
   return (
     <Routes>
-      <Route path="/" element={!session ? <Auth /> : <Navigate to="/home" />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/menu" element={<Menu />} />
-      <Route path="/admin" element={session ? <Admin /> : <Navigate to="/" />} />
-      <Route path="*" element={<NotFound />} />
+      {routes}
     </Routes>
   );
 };
