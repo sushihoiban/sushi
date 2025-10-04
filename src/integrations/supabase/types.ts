@@ -23,6 +23,7 @@ export type Database = {
           party_size: number
           table_id: string
           customer_id: string | null
+          group_id: string
         }
         Insert: {
           booking_date: string
@@ -32,6 +33,7 @@ export type Database = {
           party_size: number
           table_id: string
           customer_id?: string | null
+          group_id?: string
         }
         Update: {
           booking_date?: string
@@ -41,6 +43,7 @@ export type Database = {
           party_size?: number
           table_id?: string
           customer_id?: string | null
+          group_id?: string
         }
         Relationships: [
           {
@@ -89,18 +92,21 @@ export type Database = {
           full_name: string | null
           role: string
           updated_at: string | null
+          phone: string | null
         }
         Insert: {
           id: string
           full_name?: string | null
           role?: string
           updated_at?: string | null
+          phone?: string | null
         }
         Update: {
           id?: string
           full_name?: string | null
           role?: string
           updated_at?: string | null
+          phone?: string | null
         }
         Relationships: [
           {
@@ -149,11 +155,11 @@ export type Database = {
             };
             Returns: Tables<'restaurant_tables'>[];
         };
-        create_booking_with_customer: {
+        create_booking_for_party: {
             Args: {
                 p_customer_name: string;
                 p_customer_phone: string;
-                p_table_id: string;
+                p_table_ids: string[];
                 p_party_size: number;
                 p_booking_date: string;
                 p_booking_time: string;
@@ -260,12 +266,12 @@ export type Enums<
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Enums"][EnumName]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never

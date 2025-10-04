@@ -8,7 +8,12 @@ import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
+import AdminAvailabilityPage from "./pages/admin/AdminAvailabilityPage";
+import AdminTablesPage from "./pages/admin/AdminTablesPage";
+import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
 import { useMemo } from "react";
 
 const queryClient = new QueryClient();
@@ -26,10 +31,18 @@ const AppRoutes = () => {
         <Route path="/" element={!session ? <Auth /> : <Navigate to="/home" />} />
         <Route path="/home" element={<Home />} />
         <Route path="/menu" element={<Menu />} />
-        <Route 
-          path="/admin" 
-          element={session && isAdmin ? <Admin /> : <Navigate to="/home" />} 
-        />
+        
+        {session && isAdmin && (
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="dashboard" />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="bookings" element={<AdminBookingsPage />} />
+            <Route path="availability" element={<AdminAvailabilityPage />} />
+            <Route path="tables" element={<AdminTablesPage />} />
+            <Route path="customers" element={<AdminCustomersPage />} />
+          </Route>
+        )}
+        
         <Route path="*" element={<NotFound />} />
       </>
     );
