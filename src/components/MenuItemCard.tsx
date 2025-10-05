@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import MenuItemModal from "./MenuItemModal";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface MenuItem {
   id: number;
@@ -14,17 +18,39 @@ interface MenuItem {
 
 interface MenuItemCardProps {
   item: MenuItem;
+  isFavorited: boolean;
+  onFavoriteToggle: (itemId: number, isFavorited: boolean) => void;
 }
 
-const MenuItemCard = ({ item }: MenuItemCardProps) => {
+const MenuItemCard = ({ item, isFavorited, onFavoriteToggle }: MenuItemCardProps) => {
   const [showModal, setShowModal] = useState(false);
+  const { user } = useAuth();
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent modal from opening
+    if (!user) {
+        toast.error("Please log in to add favorites.");
+        return;
+    }
+    onFavoriteToggle(item.id, isFavorited);
+  }
 
   return (
     <>
       <Card 
-        className="overflow-hidden border-border/50 hover:border-primary/50 transition-all hover:shadow-elegant cursor-pointer group"
+        className="overflow-hidden border-border/50 hover:border-primary/50 transition-all hover:shadow-elegant cursor-pointer group relative"
         onClick={() => setShowModal(true)}
       >
+        {user && (
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute top-2 right-2 z-10 rounded-full glass-effect"
+                onClick={handleFavoriteClick}
+            >
+                <i className={`ri-heart-3-${isFavorited ? 'fill' : 'line'} text-primary text-xl`} />
+            </Button>
+        )}
         <div className="aspect-video overflow-hidden">
           <img 
             src={item.image} 

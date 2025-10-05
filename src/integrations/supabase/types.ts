@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -142,6 +141,35 @@ export type Database = {
           table_number?: number
         }
         Relationships: []
+      }
+      user_favorite_dishes: {
+        Row: {
+          id: number
+          user_id: string
+          menu_item_id: number
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          menu_item_id: number
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          menu_item_id?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorite_dishes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
