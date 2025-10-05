@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,11 +15,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showBooking, setShowBooking] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [language, setLanguage] = useState("EN");
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+
   const featuredItems = [{
     id: 1,
     title: "97. Combo 1",
@@ -46,6 +53,47 @@ const Home = () => {
     price: "85.000",
     image: "https://images.unsplash.com/photo-1618841557871-b4664fbf0cb3?w=400&h=300&fit=crop"
   }];
+  
+  useEffect(() => {
+    const fetchFavorites = async () => {
+        if (!user) return;
+        const { data, error } = await supabase
+            .from('user_favorite_dishes')
+            .select('menu_item_id')
+            .eq('user_id', user.id);
+        if (error) {
+            console.error(error);
+        } else {
+            setFavoriteIds(new Set(data.map(fav => fav.menu_item_id)));
+        }
+    };
+    fetchFavorites();
+  }, [user]);
+
+  const handleFavoriteToggle = async (itemId: number, isFavorited: boolean) => {
+    if (!user) return;
+
+    if (isFavorited) {
+        const { error } = await supabase.from('user_favorite_dishes').delete().match({ user_id: user.id, menu_item_id: itemId });
+        if(error) {
+            toast.error("Failed to remove favorite.");
+        } else {
+            setFavoriteIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(itemId);
+                return newSet;
+            });
+        }
+    } else {
+        const { error } = await supabase.from('user_favorite_dishes').insert({ user_id: user.id, menu_item_id: itemId });
+         if(error) {
+            toast.error("Failed to add favorite.");
+        } else {
+            setFavoriteIds(prev => new Set(prev).add(itemId));
+        }
+    }
+  };
+
   return <div className="min-h-screen pb-20 md:pb-0">
       {/* Mobile Top Bar */}
       <MobileTopBar />
@@ -98,6 +146,9 @@ const Home = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLanguage("DE")}>
                   Deutsch (German)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("FR")}>
+                  Français (French)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLanguage("TL")}>
                   Filipino (Tagalog)
@@ -174,7 +225,7 @@ const Home = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {featuredItems.map(item => <MenuItemCard key={item.id} item={item} />)}
+          {featuredItems.map(item => <MenuItemCard key={item.id} item={item} isFavorited={favoriteIds.has(item.id)} onFavoriteToggle={handleFavoriteToggle} />)}
         </div>
 
         <div className="text-center mt-6 md:mt-12">

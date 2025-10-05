@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import MyReservationsModal from "./MyReservationsModal";
+import LanguageSettingsModal from "./LanguageSettingsModal";
+import FavoriteDishesModal from "./FavoriteDishesModal";
 
 interface ProfileModalProps {
   open: boolean;
@@ -15,9 +17,11 @@ interface ProfileModalProps {
 }
 
 const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, profile } = useAuth();
   const navigate = useNavigate();
   const [showMyReservations, setShowMyReservations] = useState(false);
+  const [showLanguageSettings, setShowLanguageSettings] = useState(false);
+  const [showFavoriteDishes, setShowFavoriteDishes] = useState(false);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -100,6 +104,8 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                 <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 h-auto py-3"
+                onClick={() => setShowFavoriteDishes(true)}
+                disabled={!user}
                 >
                 <i className="ri-heart-line text-xl" />
                 <div className="text-left">
@@ -113,6 +119,7 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                 <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 h-auto py-3"
+                disabled
                 >
                 <i className="ri-notification-line text-xl" />
                 <div className="text-left">
@@ -126,11 +133,13 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                 <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 h-auto py-3"
+                onClick={() => setShowLanguageSettings(true)}
+                disabled={!user}
                 >
                 <i className="ri-global-line text-xl" />
                 <div className="text-left">
                     <div className="font-medium">Language</div>
-                    <div className="text-xs text-muted-foreground">English (EN)</div>
+                    <div className="text-xs text-muted-foreground">{profile?.language.toUpperCase() || 'EN'}</div>
                 </div>
                 </Button>
 
@@ -139,6 +148,7 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                 <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 h-auto py-3"
+                disabled
                 >
                 <i className="ri-settings-line text-xl" />
                 <div className="text-left">
@@ -152,6 +162,7 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
                 <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 h-auto py-3"
+                disabled
                 >
                 <i className="ri-information-line text-xl" />
                 <div className="text-left">
@@ -179,7 +190,9 @@ const ProfileModal = ({ open, onOpenChange }: ProfileModalProps) => {
             </div>
         </DialogContent>
         </Dialog>
-        <MyReservationsModal open={showMyReservations} onOpenChange={setShowMyReservations} />
+        {user && <MyReservationsModal open={showMyReservations} onOpenChange={setShowMyReservations} />}
+        {user && <LanguageSettingsModal open={showLanguageSettings} onOpenChange={setShowLanguageSettings} />}
+        {user && <FavoriteDishesModal open={showFavoriteDishes} onOpenChange={setShowFavoriteDishes} />}
     </>
   );
 };
