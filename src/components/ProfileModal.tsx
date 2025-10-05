@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import MyReservationsModal from "./MyReservationsModal";
 import LanguageSettingsModal from "./LanguageSettingsModal";
-import FavoriteDishesModal from "./FavoriteDishesModal";
+import FavoriteDishesModal from "@/components/FavoriteDishesModal"; // Corrected import path
 
 interface ProfileModalProps {
   open: boolean;

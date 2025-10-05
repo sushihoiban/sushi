@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { menuCategories } from "@/pages/Menu"; // We will get the full menu data from the Menu page for now
+import { menuCategories } from "@/lib/menu-data";
 
 // Flatten all menu items into a single array to make them easy to search
 const allMenuItems = Object.values(menuCategories).flat();
