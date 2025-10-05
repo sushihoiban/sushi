@@ -3,11 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import heroBg from "@/assets/hero-image-bg.jpg";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +22,7 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [signupMessage, setSignupMessage] = useState("");
+  const [language, setLanguage] = useState("EN");
 
   const navigate = useNavigate();
 
@@ -75,6 +81,31 @@ const Auth = () => {
         style={{ backgroundImage: `url(${heroBg})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background/90" />
+      </div>
+
+      {/* Language switcher */}
+      <div className="absolute top-4 right-4 z-20">
+        <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-primary/30 text-primary hover:bg-primary/10 transition-colors">
+            <i className="ri-global-line text-lg" />
+            <span className="text-sm font-medium">{language}</span>
+            <i className="ri-arrow-down-s-line text-sm" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur-lg border-border/50">
+            <DropdownMenuItem onClick={() => setLanguage("EN")}>English</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("VI")}>Tiếng Việt</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("KO")}>한국어 (Korean)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("ZH")}>中文 (Chinese)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("JA")}>日本語 (Japanese)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("RU")}>Русский (Russian)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("ES")}>Español (Spanish)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("DE")}>Deutsch (German)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("FR")}>Français (French)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("TL")}>Filipino (Tagalog)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("TH")}>ไทย (Thai)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("ID")}>Bahasa Indonesia</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">

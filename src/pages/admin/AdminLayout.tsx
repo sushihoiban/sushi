@@ -7,6 +7,7 @@ const adminNavLinks = [
     { to: "/admin/bookings", icon: "ri-bookmark-line", label: "Bookings" },
     { to: "/admin/tables", icon: "ri-table-line", label: "Tables" },
     { to: "/admin/customers", icon: "ri-group-line", label: "Customers" },
+    { to: "/admin/settings", icon: "ri-settings-3-line", label: "Settings" },
 ];
 
 const AdminLayout = () => {

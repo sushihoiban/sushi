@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booking_date: string
@@ -69,6 +84,7 @@ export type Database = {
           name: string
           phone: string | null
           status: "regular" | "vip"
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -76,6 +92,7 @@ export type Database = {
           name: string
           phone?: string | null
           status?: "regular" | "vip"
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -83,8 +100,17 @@ export type Database = {
           name?: string
           phone?: string | null
           status?: "regular" | "vip"
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       profiles: {
         Row: {
@@ -215,6 +241,13 @@ export type Database = {
                 p_booking_time: string;
             };
             Returns: string;
+        },
+        filter_customers: {
+            Args: {
+                name_filter: string | null;
+                booking_status_filter: string;
+            };
+            Returns: Tables<'customers'>[];
         }
     }
     Enums: {
@@ -342,9 +375,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const

@@ -14,6 +14,7 @@ import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
 import AdminAvailabilityPage from "./pages/admin/AdminAvailabilityPage";
 import AdminTablesPage from "./pages/admin/AdminTablesPage";
 import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import { useMemo } from "react";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const AppRoutes = () => {
             <Route path="availability" element={<AdminAvailabilityPage />} />
             <Route path="tables" element={<AdminTablesPage />} />
             <Route path="customers" element={<AdminCustomersPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
           </Route>
         )}
         
