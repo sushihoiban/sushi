@@ -205,7 +205,7 @@ const Auth = () => {
             <p className="text-sm text-muted-foreground mb-3">or</p>
             <Button
               variant="outline"
-              className="w-full border-border hover:bg-secondary"
+              className="w-full border-border hover:bg-secondary hover:text-foreground"
               onClick={handleGuestAccess}
             >
               Continue as Guest
