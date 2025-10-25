@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { format, addMinutes, parse } from 'date-fns';
 import EditBookingModal from '@/components/EditBookingModal';
+import { useAdminState } from '@/hooks/use-admin-state';
 
 type Booking = Database['public']['Tables']['bookings']['Row'] & {
     restaurant_tables: Database['public']['Tables']['restaurant_tables']['Row'] | null;
@@ -31,6 +32,7 @@ interface BookingGroup {
 
 
 const AdminBookings = () => {
+    const { bookingTrigger } = useAdminState();
     const [bookingGroups, setBookingGroups] = useState<BookingGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingBookingGroup, setEditingBookingGroup] = useState<BookingGroup | null>(null);
@@ -73,7 +75,7 @@ const AdminBookings = () => {
 
     useEffect(() => {
         fetchBookings();
-    }, [fetchBookings]);
+    }, [fetchBookings, bookingTrigger]);
     
     const handleCancelGroup = async (groupId: string) => {
         if (window.confirm('Are you sure you want to cancel this entire booking?')) {

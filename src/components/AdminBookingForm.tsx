@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBooking } from "@/hooks/use-booking";
 import { Database } from "@/integrations/supabase/types";
 import { format, addMinutes, parse } from 'date-fns';
+import { useAdminState } from "@/hooks/use-admin-state";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 
@@ -19,6 +20,7 @@ const toLocalDateString = (date: Date): string => {
 
 export const AdminBookingForm = () => {
   const { timeSlotAvailability, loading, checkAllAvailability, lunchTimeSlots, dinnerTimeSlots } = useBooking();
+  const { refetchBookings } = useAdminState();
   
   const [partySize, setPartySize] = useState(2);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -95,6 +97,7 @@ export const AdminBookingForm = () => {
         });
         if (error) throw error;
         toast.success("Booking created successfully!");
+        refetchBookings();
         setCustomerName('');
         setCustomerPhone('');
         setSelectedTime(null);
