@@ -34,31 +34,31 @@ export type Database = {
           booking_date: string
           booking_time: string
           created_at: string
+          customer_id: string | null
+          group_id: string
           id: string
           party_size: number
           table_id: string
-          customer_id: string | null
-          group_id: string
         }
         Insert: {
           booking_date: string
           booking_time: string
           created_at?: string
+          customer_id?: string | null
+          group_id?: string
           id?: string
           party_size: number
           table_id: string
-          customer_id?: string | null
-          group_id?: string
         }
         Update: {
           booking_date?: string
           booking_time?: string
           created_at?: string
+          customer_id?: string | null
+          group_id?: string
           id?: string
           party_size?: number
           table_id?: string
-          customer_id?: string | null
-          group_id?: string
         }
         Relationships: [
           {
@@ -80,72 +80,59 @@ export type Database = {
       customers: {
         Row: {
           created_at: string
+          first_name: string | null
           id: string
-          name: string
+          last_name: string | null
           phone: string | null
-          status: "regular" | "vip"
+          status: Database["public"]["Enums"]["customer_status"]
           user_id: string | null
         }
         Insert: {
           created_at?: string
+          first_name?: string | null
           id?: string
-          name: string
+          last_name?: string | null
           phone?: string | null
-          status?: "regular" | "vip"
+          status?: Database["public"]["Enums"]["customer_status"]
           user_id?: string | null
         }
         Update: {
           created_at?: string
+          first_name?: string | null
           id?: string
-          name?: string
+          last_name?: string | null
           phone?: string | null
-          status?: "regular" | "vip"
+          status?: Database["public"]["Enums"]["customer_status"]
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "customers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
-          id: string
           full_name: string | null
+          id: string
+          language: string
+          phone: string | null
           role: string
           updated_at: string | null
-          phone: string | null
-          language: string
         }
         Insert: {
-          id: string
           full_name?: string | null
+          id: string
+          language?: string
+          phone?: string | null
           role?: string
           updated_at?: string | null
-          phone?: string | null
-          language?: string
         }
         Update: {
-          id?: string
           full_name?: string | null
+          id?: string
+          language?: string
+          phone?: string | null
           role?: string
           updated_at?: string | null
-          phone?: string | null
-          language?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       restaurant_tables: {
         Row: {
@@ -173,88 +160,158 @@ export type Database = {
       }
       user_favorite_dishes: {
         Row: {
-          id: number
-          user_id: string
-          menu_item_id: number
           created_at: string
+          id: number
+          menu_item_id: number
+          user_id: string
         }
         Insert: {
-          id?: number
-          user_id: string
-          menu_item_id: number
           created_at?: string
+          id?: number
+          menu_item_id: number
+          user_id: string
         }
         Update: {
-          id?: number
-          user_id?: string
-          menu_item_id?: number
           created_at?: string
+          id?: number
+          menu_item_id?: number
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_favorite_dishes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-        get_available_tables: {
-            Args: {
-                p_booking_date: string;
-                p_booking_time: string;
-                p_party_size: number;
-            };
-            Returns: Tables<'restaurant_tables'>[];
-        };
-        create_booking_for_party: {
-            Args: {
-                p_customer_name: string;
-                p_customer_phone: string;
-                p_table_ids: string[];
-                p_party_size: number;
-                p_booking_date: string;
-                p_booking_time: string;
-            };
-            Returns: string;
-        };
-        cancel_booking_group: {
-            Args: {
-                p_group_id: string;
-            };
-            Returns: undefined;
-        };
-        update_booking_group: {
-            Args: {
-                p_group_id_to_cancel: string;
-                p_customer_name: string;
-                p_customer_phone: string;
-                p_new_table_ids: string[];
-                p_new_party_size: number;
-                p_booking_date: string;
-                p_booking_time: string;
-            };
-            Returns: string;
-        },
-        filter_customers: {
-            Args: {
-                name_filter: string | null;
-                booking_status_filter: string;
-            };
-            Returns: Tables<'customers'>[];
+      add_customer: {
+        Args: {
+          p_first_name: string
+          p_last_name: string
+          p_phone: string
+          p_status: Database["public"]["Enums"]["customer_status"]
         }
+        Returns: undefined
+      }
+      cancel_booking_group: { Args: { p_group_id: string }; Returns: undefined }
+      check_customer_exists: {
+        Args: { p_phone_number: string }
+        Returns: boolean
+      }
+      create_booking_for_party: {
+        Args: {
+          p_booking_date: string
+          p_booking_time: string
+          p_customer_phone: string
+          p_first_name: string
+          p_last_name: string
+          p_party_size: number
+          p_table_ids: string[]
+        }
+        Returns: string
+      }
+      create_booking_with_customer: {
+        Args: {
+          p_booking_date: string
+          p_booking_time: string
+          p_create_customer?: boolean
+          p_customer_name: string
+          p_customer_phone: string
+          p_party_size: number
+          p_table_ids: string[]
+          p_user_id?: string
+        }
+        Returns: {
+          created_booking_id: string
+        }[]
+      }
+      filter_customers: {
+        Args: { booking_status_filter: string; name_filter: string }
+        Returns: Database["public"]["CompositeTypes"]["customer_details"][]
+        SetofOptions: {
+          from: "*"
+          to: "customer_details"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_admin_bookings: {
+        Args: never
+        Returns: Database["public"]["CompositeTypes"]["admin_booking_row"][]
+        SetofOptions: {
+          from: "*"
+          to: "admin_booking_row"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_available_tables: {
+        Args: {
+          p_booking_date: string
+          p_booking_time: string
+          p_party_size: number
+        }
+        Returns: {
+          created_at: string
+          id: string
+          is_available: boolean
+          seats: number
+          table_number: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "restaurant_tables"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_my_role: { Args: never; Returns: string }
+      get_user_email_by_id: { Args: { p_user_id: string }; Returns: string }
+      update_booking_group: {
+        Args: {
+          p_booking_date: string
+          p_booking_time: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_group_id_to_cancel: string
+          p_new_party_size: number
+          p_new_table_ids: string[]
+        }
+        Returns: string
+      }
+      update_customer_details: {
+        Args: {
+          p_customer_id: string
+          p_first_name: string
+          p_last_name: string
+          p_phone: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      customer_status: "regular" | "vip"
     }
     CompositeTypes: {
-      [_ in never]: never
+      admin_booking_row: {
+        id: string | null
+        booking_date: string | null
+        booking_time: string | null
+        party_size: number | null
+        group_id: string | null
+        customer_name: string | null
+        customer_phone: string | null
+        tables: string | null
+      }
+      customer_details: {
+        id: string | null
+        first_name: string | null
+        last_name: string | null
+        phone: string | null
+        status: Database["public"]["Enums"]["customer_status"] | null
+        user_id: string | null
+        email: string | null
+      }
     }
   }
 }
@@ -375,3 +432,11 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      customer_status: ["regular", "vip"],
+    },
+  },
+} as const

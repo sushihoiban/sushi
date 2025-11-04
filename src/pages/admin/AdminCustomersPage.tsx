@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
 import {
   Table,
   TableBody,
@@ -13,8 +12,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AddCustomerModal from '@/components/AddCustomerModal';
+import EditCustomerModal from '@/components/EditCustomerModal'; // Import the new modal
 
-type Customer = Database['public']['Tables']['customers']['Row'];
+// This is the shape of the customer data we get from our 'filter_customers' function.
+type Customer = {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone: string;
+    email: string;
+    user_id: string;
+    status: 'regular' | 'vip';
+};
+
+const fetchCustomers = async (nameFilter: string, bookingStatusFilter: string): Promise<Customer[]> => {
+    const { data, error } = await supabase.rpc('filter_customers', {
+        name_filter: nameFilter || null,
+        booking_status_filter: bookingStatusFilter,
+    });
+    if (error) throw error;
+    return (data as any) || []; // Cast to any to avoid type errors with generated types
+}
 
 const AdminCustomersPage = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -22,17 +40,14 @@ const AdminCustomersPage = () => {
     const [nameFilter, setNameFilter] = useState('');
     const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-    const fetchCustomers = useCallback(async () => {
+    const loadCustomers = useCallback(async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.rpc('filter_customers', {
-                name_filter: nameFilter || null,
-                booking_status_filter: bookingStatusFilter,
-            });
-
-            if (error) throw error;
-            setCustomers(data || []);
+            const data = await fetchCustomers(nameFilter, bookingStatusFilter);
+            setCustomers(data);
         } catch (error) {
             console.error('Error fetching customers:', error);
         } finally {
@@ -42,10 +57,15 @@ const AdminCustomersPage = () => {
 
     useEffect(() => {
         const debounce = setTimeout(() => {
-            fetchCustomers();
-        }, 300); // Debounce text input
+            loadCustomers();
+        }, 300);
         return () => clearTimeout(debounce);
-    }, [fetchCustomers, nameFilter, bookingStatusFilter]);
+    }, [loadCustomers]);
+
+    const handleEditClick = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setIsEditModalOpen(true);
+    };
 
     const formatPhoneNumber = (phone: string | null) => {
         if (!phone) return '';
@@ -87,6 +107,8 @@ const AdminCustomersPage = () => {
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>Phone</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Account</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
@@ -94,10 +116,13 @@ const AdminCustomersPage = () => {
                     <TableBody>
                         {customers.map((customer) => (
                             <TableRow key={customer.id}>
-                                <TableCell>{customer.name}</TableCell>
+                                <TableCell>{`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'N/A'}</TableCell>
                                 <TableCell>{customer.phone || 'N/A'}</TableCell>
+                                <TableCell>{customer.email || 'N/A'}</TableCell>
+                                <TableCell>{customer.user_id ? 'Yes' : 'No'}</TableCell>
                                 <TableCell>{customer.status}</TableCell>
                                 <TableCell className="space-x-2">
+                                    <Button variant="outline" size="sm" onClick={() => handleEditClick(customer)}>Edit</Button>
                                     {customer.phone && (
                                         <>
                                             <Button asChild size="icon" variant="outline">
@@ -121,7 +146,13 @@ const AdminCustomersPage = () => {
             <AddCustomerModal 
                 open={isAddModalOpen}
                 onOpenChange={setIsAddModalOpen}
-                onCustomerAdded={fetchCustomers}
+                onCustomerAdded={loadCustomers}
+            />
+            <EditCustomerModal
+                customer={selectedCustomer}
+                open={isEditModalOpen}
+                onOpenChange={setIsEditModalOpen}
+                onCustomerUpdated={loadCustomers}
             />
         </div>
     );

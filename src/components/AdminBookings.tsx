@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
 import {
   Table,
   TableBody,
@@ -15,59 +14,53 @@ import { format, addMinutes, parse } from 'date-fns';
 import EditBookingModal from '@/components/EditBookingModal';
 import { useAdminState } from '@/hooks/use-admin-state';
 
-type Booking = Database['public']['Tables']['bookings']['Row'] & {
-    restaurant_tables: Database['public']['Tables']['restaurant_tables']['Row'] | null;
-    customers: Database['public']['Tables']['customers']['Row'] | null;
-};
-
-// This interface represents a "grouped" booking for the UI
-interface BookingGroup {
-    group_id: string;
-    bookings: Booking[];
-    total_party_size: number;
-    customer: Database['public']['Tables']['customers']['Row'] | null;
+// Corresponds to the 'admin_booking_row' type in the new SQL function
+interface AdminBooking {
+    id: string;
     booking_date: string;
     booking_time: string;
+    party_size: number;
+    group_id: string;
+    customer_name: string;
+    customer_phone: string;
+    tables: string;
+}
+
+// The BookingGroup for the Edit modal needs a different structure.
+// We'll create it on the fly when the user clicks "Edit".
+interface BookingGroupForEdit {
+    group_id: string;
+    customer: {
+        name: string;
+        phone: string;
+    };
+    booking_date: string;
+    booking_time: string;
+    total_party_size: number;
+    bookings: { 
+        restaurant_tables: { table_number: number } | null;
+    }[];
 }
 
 
 const AdminBookings = () => {
     const { bookingTrigger } = useAdminState();
-    const [bookingGroups, setBookingGroups] = useState<BookingGroup[]>([]);
+    const [bookings, setBookings] = useState<AdminBooking[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingBookingGroup, setEditingBookingGroup] = useState<BookingGroup | null>(null);
+    const [editingBookingGroup, setEditingBookingGroup] = useState<BookingGroupForEdit | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const fetchBookings = useCallback(async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('bookings')
-                .select('*, restaurant_tables(*), customers(*)')
-                .order('booking_date', { ascending: false })
-                .order('booking_time', { ascending: true });
-            if (error) throw error;
-
-            // Group bookings by group_id
-            const groups: { [key: string]: BookingGroup } = {};
-            for (const booking of data as Booking[]) {
-                if (!groups[booking.group_id]) {
-                    groups[booking.group_id] = {
-                        group_id: booking.group_id,
-                        bookings: [],
-                        total_party_size: 0,
-                        customer: booking.customers,
-                        booking_date: booking.booking_date,
-                        booking_time: booking.booking_time,
-                    };
-                }
-                groups[booking.group_id].bookings.push(booking);
-                groups[booking.group_id].total_party_size += booking.party_size;
+            const { data, error } = await supabase.rpc('get_admin_bookings');
+            if (error) {
+                console.error("Error fetching bookings:", error);
+                throw error;
             }
-            setBookingGroups(Object.values(groups));
-
+            setBookings(data || []);
         } catch (error) {
-            console.error('Error fetching bookings:', error);
+            toast.error("Failed to load bookings. See console for details.");
         } finally {
             setLoading(false);
         }
@@ -76,7 +69,7 @@ const AdminBookings = () => {
     useEffect(() => {
         fetchBookings();
     }, [fetchBookings, bookingTrigger]);
-    
+
     const handleCancelGroup = async (groupId: string) => {
         if (window.confirm('Are you sure you want to cancel this entire booking?')) {
             try {
@@ -89,9 +82,22 @@ const AdminBookings = () => {
             }
         }
     }
-    
-    const handleEditClick = (group: BookingGroup) => {
-        setEditingBookingGroup(group);
+
+    const handleEditClick = (booking: AdminBooking) => {
+        const groupForEdit: BookingGroupForEdit = {
+            group_id: booking.group_id,
+            customer: {
+                name: booking.customer_name,
+                phone: booking.customer_phone,
+            },
+            booking_date: booking.booking_date,
+            booking_time: booking.booking_time,
+            total_party_size: booking.party_size,
+            bookings: booking.tables.split(',').map(tn => ({
+                restaurant_tables: { table_number: parseInt(tn.trim(), 10) }
+            })),
+        };
+        setEditingBookingGroup(groupForEdit);
         setIsEditModalOpen(true);
     }
 
@@ -119,23 +125,23 @@ const AdminBookings = () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {bookingGroups.map((group) => (
-                        <TableRow key={group.group_id}>
-                            <TableCell>{group.bookings.map(b => `T${b.restaurant_tables?.table_number}`).join(', ')}</TableCell>
-                            <TableCell>{group.customer?.name || 'N/A'}</TableCell>
-                            <TableCell>{group.total_party_size}</TableCell>
-                            <TableCell>{group.booking_date}</TableCell>
-                            <TableCell>{group.booking_time.substring(0,5)}</TableCell>
-                            <TableCell>{getEndTime(group.booking_time)}</TableCell>
+                    {bookings.map((booking) => (
+                        <TableRow key={booking.id}>
+                            <TableCell>{booking.tables}</TableCell>
+                            <TableCell>{booking.customer_name || 'N/A'}</TableCell>
+                            <TableCell>{booking.party_size}</TableCell>
+                            <TableCell>{booking.booking_date}</TableCell>
+                            <TableCell>{booking.booking_time.substring(0,5)}</TableCell>
+                            <TableCell>{getEndTime(booking.booking_time)}</TableCell>
                             <TableCell className="space-x-2">
-                                <Button variant="outline" size="sm" onClick={() => handleEditClick(group)}>Edit</Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleCancelGroup(group.group_id)}>Cancel</Button>
+                                <Button variant="outline" size="sm" onClick={() => handleEditClick(booking)}>Edit</Button>
+                                <Button variant="destructive" size="sm" onClick={() => handleCancelGroup(booking.group_id)}>Cancel</Button>
                             </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
-            <EditBookingModal 
+            <EditBookingModal
                 bookingGroup={editingBookingGroup}
                 open={isEditModalOpen}
                 onOpenChange={setIsEditModalOpen}

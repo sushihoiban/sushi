@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -10,48 +10,62 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-interface AddCustomerModalProps {
+// This is the shape of the customer data the modal will receive.
+// It matches the 'customer_details' type from our 'filter_customers' function.
+type Customer = {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone: string;
+    email: string;
+};
+
+interface EditCustomerModalProps {
+    customer: Customer | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onCustomerAdded: () => void;
+    onCustomerUpdated: () => void;
 }
 
-const AddCustomerModal = ({ open, onOpenChange, onCustomerAdded }: AddCustomerModalProps) => {
+const EditCustomerModal = ({ customer, open, onOpenChange, onCustomerUpdated }: EditCustomerModalProps) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [phone, setPhone] = useState('');
-    const [status, setStatus] = useState<'regular' | 'vip'>('regular');
     const [loading, setLoading] = useState(false);
 
-    const handleAddCustomer = async (e: React.FormEvent) => {
+    // When a customer is selected, populate the form fields with their data.
+    useEffect(() => {
+        if (customer) {
+            setFirstName(customer.first_name || '');
+            setLastName(customer.last_name || '');
+            setPhone(customer.phone || '');
+        }
+    }, [customer]);
+
+    const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!customer) return;
 
         setLoading(true);
         try {
-            const { error } = await supabase.rpc('add_customer', {
+            const { error } = await supabase.rpc('update_customer_details', {
+                p_customer_id: customer.id,
                 p_first_name: firstName,
                 p_last_name: lastName,
                 p_phone: phone,
-                p_status: status,
             });
 
             if (error) throw error;
 
-            toast.success('New customer added successfully!');
-            onCustomerAdded();
-            onOpenChange(false);
-            // Reset form
-            setFirstName('');
-            setLastName('');
-            setPhone('');
-            setStatus('regular');
+            toast.success('Customer details updated successfully!');
+            onCustomerUpdated(); // This will trigger a refresh of the customer list.
+            onOpenChange(false); // Close the modal.
         } catch (error: any) {
-            console.error('Error adding customer:', error);
-            toast.error(`Failed to add customer: ${error.message}`);
+            console.error('Error updating customer:', error);
+            toast.error(`Failed to update customer: ${error.message}`);
         } finally {
             setLoading(false);
         }
@@ -61,9 +75,9 @@ const AddCustomerModal = ({ open, onOpenChange, onCustomerAdded }: AddCustomerMo
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Add New Customer</DialogTitle>
+                    <DialogTitle>Edit Customer Details</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleAddCustomer}>
+                <form onSubmit={handleUpdate}>
                     <div className="space-y-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="firstName" className="text-right">
@@ -101,18 +115,15 @@ const AddCustomerModal = ({ open, onOpenChange, onCustomerAdded }: AddCustomerMo
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="status" className="text-right">
-                                Status
+                            <Label htmlFor="email" className="text-right">
+                                Email
                             </Label>
-                            <Select value={status} onValueChange={(value) => setStatus(value as 'regular' | 'vip')}>
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="regular">Regular</SelectItem>
-                                    <SelectItem value="vip">VIP</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Input
+                                id="email"
+                                value={customer?.email || 'N/A'}
+                                className="col-span-3"
+                                disabled
+                            />
                         </div>
                     </div>
                     <DialogFooter>
@@ -122,7 +133,7 @@ const AddCustomerModal = ({ open, onOpenChange, onCustomerAdded }: AddCustomerMo
                             </Button>
                         </DialogClose>
                         <Button type="submit" disabled={loading}>
-                            {loading ? 'Adding...' : 'Add Customer'}
+                            {loading ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </DialogFooter>
                 </form>
@@ -131,4 +142,4 @@ const AddCustomerModal = ({ open, onOpenChange, onCustomerAdded }: AddCustomerMo
     );
 };
 
-export default AddCustomerModal;
+export default EditCustomerModal;
